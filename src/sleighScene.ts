@@ -1,10 +1,31 @@
 import sleighUrl from "./images/sleigh.png";
+import { PerlinNoise, PerlinOctave } from "./perlinNoise";
 
 export class SleighScene extends Phaser.Scene {
-  private static readonly snowHeightMax = 40;
   private static readonly snowPadding = 50;
 
   private sleigh?: Phaser.Physics.Matter.Image;
+  private readonly noise: PerlinNoise;
+
+  private readonly perlinOctaves: PerlinOctave[] = [
+    {
+      amplitude: 200,
+      interval: 900,
+    },
+    {
+      amplitude: 70,
+      interval: 500,
+    },
+    {
+      amplitude: 20,
+      interval: 100,
+    },
+  ];
+
+  private readonly totalPerlinAmplitude: number = this.perlinOctaves.reduce(
+    (result, { amplitude }) => result + amplitude,
+    0
+  );
 
   constructor() {
     super({
@@ -17,26 +38,32 @@ export class SleighScene extends Phaser.Scene {
         },
       },
     });
+
+    this.noise = new PerlinNoise(
+      this.perlinOctaves,
+      new Date().getMilliseconds()
+    );
   }
 
   private getSnowVerts() {
-    const numVerts = 20;
+    const numVerts = 75;
     const verts: { x: number; y: number }[] = [];
 
     for (let i = 0; i < numVerts; i++) {
+      const x = (i / (numVerts - 1)) * this.game.canvas.width;
       verts.push({
-        x: (i / (numVerts - 1)) * this.game.canvas.width,
-        y: Phaser.Math.Between(0, SleighScene.snowHeightMax),
+        x,
+        y: this.noise.sample(x),
       });
     }
 
-    verts.push(
-      {
-        x: this.game.canvas.width,
-        y: SleighScene.snowHeightMax + SleighScene.snowPadding,
-      },
-      { x: 0, y: SleighScene.snowHeightMax + SleighScene.snowPadding }
-    );
+    for (let i = numVerts - 1; i >= 0; i--) {
+      const x = (i / (numVerts - 1)) * this.game.canvas.width;
+      verts.push({
+        x,
+        y: this.totalPerlinAmplitude + SleighScene.snowPadding,
+      });
+    }
 
     return verts;
   }
@@ -61,9 +88,13 @@ export class SleighScene extends Phaser.Scene {
   }
 
   create() {
+    this.input.keyboard?.on("keydown-R", () => {
+      this.scene.restart();
+    });
+
     const sleighImage = this.add.image(
       300,
-      this.game.canvas.height / 2,
+      this.noise.sample(300) - 200,
       "sleigh"
     );
 
