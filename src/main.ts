@@ -16,7 +16,6 @@ export const game = new Phaser.Game({
     default: "matter",
 
     matter: {
-      debug: true,
       gravity: {
         y: 1,
       },

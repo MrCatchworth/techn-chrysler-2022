@@ -25,12 +25,6 @@ export class PerlinNoise {
 
       const valueAtStart = this.getRandomValue(octaveStart) * amplitude;
       const valueAtEnd = this.getRandomValue(octaveEnd) * amplitude;
-      console.log(
-        "Noise value of ",
-        octaveStart,
-        " is ",
-        this.getRandomValue(octaveStart)
-      );
 
       const fractionFromStart = (x - octaveStart) / interval;
 
